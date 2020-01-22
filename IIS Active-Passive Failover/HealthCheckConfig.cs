@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 
 namespace IIS_Active_Passive_Failover
@@ -14,47 +13,55 @@ namespace IIS_Active_Passive_Failover
 	{
 		public string HealthCheckUrl { get; set; }
 
+		public string Method { get; set; }
+
 		public HealthCheckMode Mode { get; set; }
 
 		public string HealthCheckValue { get; set; }
 
-		public int Timeout { get; set; }
+		private HttpClient httpClient;
 
-		public HealthCheckConfig(string activeRootUrl, string healthCheckPath, string mode, string value, int timeout)
+		public HealthCheckConfig(string activeRootUrl, string method, string healthCheckPath, string mode, string value, int timeout)
 		{
-
 			HealthCheckUrl = activeRootUrl;
 			if (!HealthCheckUrl.EndsWith("/")) { HealthCheckUrl += "/"; }
 			HealthCheckUrl += healthCheckPath;
 
+			Method = method;
 			Mode = (mode == "Match" ? HealthCheckMode.Match : HealthCheckMode.ResponseStatus);
 			HealthCheckValue = value;
-			Timeout = timeout;
+
+			httpClient = new HttpClient();
+			httpClient.Timeout = new System.TimeSpan(0, 0, timeout);
 		}
 
 		public bool Check()
 		{
 			try
 			{
-				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(HealthCheckUrl);
-				request.AutomaticDecompression = DecompressionMethods.GZip;
-				request.Timeout = Timeout * 1000;
+				HttpResponseMessage response = null;
 
-				using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+				if (Method == "GET")
 				{
-					if (Mode == HealthCheckMode.ResponseStatus)
-					{
-						return (((int)response.StatusCode).ToString() == HealthCheckValue);
-					}
-					else
-					{
-						using (Stream stream = response.GetResponseStream())
-						using (StreamReader reader = new StreamReader(stream))
-						{
-							string body = reader.ReadToEnd();
-							return Regex.IsMatch(body, HealthCheckValue);
-						}
-					}
+					response = httpClient.GetAsync(HealthCheckUrl).Result;
+				}
+				else if (Method == "POST")
+				{
+					response = httpClient.PostAsync(HealthCheckUrl, null).Result;
+				}
+				else
+				{
+					return false;
+				}
+
+				if (Mode == HealthCheckMode.ResponseStatus)
+				{
+					return (((int)response.StatusCode).ToString() == HealthCheckValue);
+				}
+				else
+				{
+					string body = response.Content.ReadAsStringAsync().Result;
+					return Regex.IsMatch(body, HealthCheckValue);
 				}
 			}
 			catch
