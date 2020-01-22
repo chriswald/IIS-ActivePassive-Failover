@@ -25,6 +25,16 @@ namespace IIS_Active_Passive_Failover
 			ReverseProxyRuleName = reverseProxyRuleName;
 			InboundSubpath = inboundSubpath;
 
+			if (!ActiveRootUrl.EndsWith("/"))
+			{
+				ActiveRootUrl += "/";
+			}
+
+			if (!PassiveRootUrl.EndsWith("/"))
+			{
+				PassiveRootUrl += "/";
+			}
+
 			if (!InboundSubpath.EndsWith("/"))
 			{
 				InboundSubpath += "/";
