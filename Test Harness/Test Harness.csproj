@@ -49,15 +49,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IIS Active-Passive Failover\IIS Active-Passive Failover.csproj">
-      <Project>{36CA915C-8074-4C94-87CF-9D7C441EAE45}</Project>
-      <Name>IIS Active-Passive Failover</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\IIS Active-Passive Failover\App.config">
       <Link>App.config</Link>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IIS Active-Passive Failover\IIS Active-Passive Failover.csproj">
+      <Project>{36ca915c-8074-4c94-87cf-9d7c441eae45}</Project>
+      <Name>IIS Active-Passive Failover</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

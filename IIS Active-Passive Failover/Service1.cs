@@ -1,4 +1,6 @@
 ﻿using System.Configuration;
+using System.IO;
+using System.Reflection;
 using System.ServiceProcess;
 using System.Threading;
 
@@ -37,6 +39,7 @@ namespace IIS_Active_Passive_Failover
 			}
 			else
 			{
+				Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
 				configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 			}
 
