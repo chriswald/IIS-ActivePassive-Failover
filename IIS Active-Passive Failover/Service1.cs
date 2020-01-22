@@ -51,6 +51,7 @@ namespace IIS_Active_Passive_Failover
 			ReverseProxyConfig reverseProxyConfig = new ReverseProxyConfig(activeUrl, passiveUrl, webConfigPath, ruleName, inboundSubpath);
 
 			string healthCheckPath = configuration.AppSettings.Settings["HealthCheckPath"].Value;
+			string method = configuration.AppSettings.Settings["HealthCheckMethod"].Value;
 			string mode = configuration.AppSettings.Settings["HealthCheckMode"].Value;
 			string healthCheckValue = configuration.AppSettings.Settings["HealthCheckValue"].Value;
 			string timeoutString = configuration.AppSettings.Settings["HealthCheckTimeout"].Value;
@@ -59,7 +60,7 @@ namespace IIS_Active_Passive_Failover
 			int timeout = int.Parse(timeoutString);
 			int interval = int.Parse(intervalString);
 
-			HealthCheckConfig healthCheckConfig = new HealthCheckConfig(activeUrl, healthCheckPath, mode, healthCheckValue, timeout);
+			HealthCheckConfig healthCheckConfig = new HealthCheckConfig(activeUrl, method, healthCheckPath, mode, healthCheckValue, timeout);
 
 			Thread thread = new Thread(() => { Run(reverseProxyConfig, healthCheckConfig, interval); });
 			thread.Start();
