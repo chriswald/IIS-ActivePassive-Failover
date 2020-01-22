@@ -14,9 +14,9 @@ namespace IIS_Active_Passive_Failover
 {
 	public partial class Service1 : ServiceBase
 	{
-		private ReverseProxyConfig ReverseProxyConfig { get; set; }
+		private volatile CancellationTokenSource CancellationTokenSource = null;
 
-		private CancellationTokenSource CancellationTokenSource { get; set; }
+		private Thread Worker = null;
 
 		private ExeConfigurationFileMap FileMap { get; set; }
 
@@ -29,6 +29,11 @@ namespace IIS_Active_Passive_Failover
 		{
 			FileMap = map;
 			OnStart(null);
+		}
+
+		public void ExternalStop()
+		{
+			this.OnStop();
 		}
 
 		protected override void OnStart(string[] args)
@@ -50,33 +55,47 @@ namespace IIS_Active_Passive_Failover
 			string ruleName = configuration.AppSettings.Settings["ReverseProxyRuleName"].Value;
 			string inboundSubpath = configuration.AppSettings.Settings["InboundSubpath"].Value;
 
-			ReverseProxyConfig = new ReverseProxyConfig(activeUrl, passiveUrl, webConfigPath, ruleName, inboundSubpath);
+			ReverseProxyConfig reverseProxyConfig = new ReverseProxyConfig(activeUrl, passiveUrl, webConfigPath, ruleName, inboundSubpath);
 
-			Run();
-		}
+			string healthCheckPath = configuration.AppSettings.Settings["HealthCheckPath"].Value;
+			string mode = configuration.AppSettings.Settings["HealthCheckMode"].Value;
+			string healthCheckValue = configuration.AppSettings.Settings["HealthCheckValue"].Value;
+			string timeoutString = configuration.AppSettings.Settings["HealthCheckTimeout"].Value;
+			string intervalString = configuration.AppSettings.Settings["HealthCheckInterval"].Value;
 
-		private void Run()
-		{
+			int timeout = int.Parse(timeoutString);
+			int interval = int.Parse(intervalString);
+
+			HealthCheckConfig healthCheckConfig = new HealthCheckConfig(activeUrl, healthCheckPath, mode, healthCheckValue, timeout);
+
 			CancellationTokenSource = new CancellationTokenSource();
 			CancellationToken token = CancellationTokenSource.Token;
 
-			Task.Run(() =>
+			Worker = new Thread(() => { Run(token, reverseProxyConfig, healthCheckConfig, interval); });
+			Worker.Start();
+		}
+
+		private void Run(CancellationToken token, ReverseProxyConfig reverseProxyConfig, HealthCheckConfig healthCheckConfig, int interval)
+		{
+			while (!CancellationTokenSource.IsCancellationRequested)
 			{
-				while (true)
+				if (healthCheckConfig.Check())
 				{
-					if (token.IsCancellationRequested)
-					{
-						break;
-					}
-
-
+					reverseProxyConfig.MarkServiceAvailable();
 				}
-			}, token);
+				else
+				{
+					reverseProxyConfig.MarkServiceDown();
+				}
+
+				Thread.Sleep(interval * 1000);
+			}
 		}
 
 		protected override void OnStop()
 		{
-			CancellationTokenSource.Cancel();
+			CancellationTokenSource?.Cancel();
+			Worker?.Join();
 		}
 	}
 }
