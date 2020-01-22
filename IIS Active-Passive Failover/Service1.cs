@@ -8,9 +8,7 @@ namespace IIS_Active_Passive_Failover
 {
 	public partial class Service1 : ServiceBase
 	{
-		private volatile CancellationTokenSource CancellationTokenSource = null;
-
-		private Thread Worker = null;
+		private volatile CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 
 		private ExeConfigurationFileMap FileMap { get; set; }
 
@@ -63,14 +61,11 @@ namespace IIS_Active_Passive_Failover
 
 			HealthCheckConfig healthCheckConfig = new HealthCheckConfig(activeUrl, healthCheckPath, mode, healthCheckValue, timeout);
 
-			CancellationTokenSource = new CancellationTokenSource();
-			CancellationToken token = CancellationTokenSource.Token;
-
-			Worker = new Thread(() => { Run(token, reverseProxyConfig, healthCheckConfig, interval); });
-			Worker.Start();
+			Thread thread = new Thread(() => { Run(reverseProxyConfig, healthCheckConfig, interval); });
+			thread.Start();
 		}
 
-		private void Run(CancellationToken token, ReverseProxyConfig reverseProxyConfig, HealthCheckConfig healthCheckConfig, int interval)
+		private void Run(ReverseProxyConfig reverseProxyConfig, HealthCheckConfig healthCheckConfig, int interval)
 		{
 			while (!CancellationTokenSource.IsCancellationRequested)
 			{
@@ -89,8 +84,7 @@ namespace IIS_Active_Passive_Failover
 
 		protected override void OnStop()
 		{
-			CancellationTokenSource?.Cancel();
-			Worker?.Join();
+			CancellationTokenSource.Cancel();
 		}
 	}
 }
