@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HealthCheckConfig.cs" />
     <Compile Include="ReverseProxyConfig.cs" />
     <Compile Include="Service1.cs">
       <SubType>Component</SubType>
