@@ -12,6 +12,10 @@ namespace IIS_Active_Passive_Failover
 
 		private ExeConfigurationFileMap FileMap { get; set; }
 
+		private volatile int slowStartCount;
+
+		private volatile int numSuccessAfterFail;
+
 		public Service1()
 		{
 			InitializeComponent();
@@ -62,6 +66,10 @@ namespace IIS_Active_Passive_Failover
 
 			HealthCheckConfig healthCheckConfig = new HealthCheckConfig(activeUrl, method, healthCheckPath, mode, healthCheckValue, timeout);
 
+			string slowStart = configuration.AppSettings.Settings["SlowStart"].Value;
+			slowStartCount = int.Parse(slowStart);
+			numSuccessAfterFail = slowStartCount; // Assume everything's good to start
+
 			Thread thread = new Thread(() => { Run(reverseProxyConfig, healthCheckConfig, interval); });
 			thread.Start();
 		}
@@ -72,10 +80,18 @@ namespace IIS_Active_Passive_Failover
 			{
 				if (healthCheckConfig.Check())
 				{
-					reverseProxyConfig.MarkServiceAvailable();
+					if (numSuccessAfterFail < slowStartCount)
+					{
+						numSuccessAfterFail++;
+					}
+					else
+					{
+						reverseProxyConfig.MarkServiceAvailable();
+					}
 				}
 				else
 				{
+					numSuccessAfterFail = 0;
 					reverseProxyConfig.MarkServiceDown();
 				}
 
