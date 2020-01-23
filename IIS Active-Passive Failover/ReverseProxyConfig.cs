@@ -1,4 +1,5 @@
-﻿using System.Xml;
+using System.Diagnostics;
+using System.Xml;
 
 namespace IIS_Active_Passive_Failover
 {
@@ -47,6 +48,8 @@ namespace IIS_Active_Passive_Failover
 		{
 			if (isActiveAvailable) { return; }
 
+			EventLog.WriteEntry("IIS Active-Passive Failover", "Marking service available", EventLogEntryType.Information);
+
 			WriteRewriteRule(true);
 
 			isActiveAvailable = true;
@@ -55,6 +58,8 @@ namespace IIS_Active_Passive_Failover
 		public void MarkServiceDown()
 		{
 			if (!isActiveAvailable) { return; }
+
+			EventLog.WriteEntry("IIS Active-Passive Failover", "Marking service down", EventLogEntryType.Information);
 
 			WriteRewriteRule(false);
 
