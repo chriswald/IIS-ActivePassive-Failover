@@ -80,7 +80,7 @@ namespace IIS_Active_Passive_Failover
 			{
 				if (healthCheckConfig.Check())
 				{
-					if (numSuccessAfterFail < slowStartCount)
+					if (numSuccessAfterFail < (slowStartCount - 1))
 					{
 						numSuccessAfterFail++;
 					}
