@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 
@@ -64,8 +66,9 @@ namespace IIS_Active_Passive_Failover
 					return Regex.IsMatch(body, HealthCheckValue);
 				}
 			}
-			catch
+			catch (Exception e)
 			{
+				EventLog.WriteEntry("IIS Active-Passive Failover", $"Exception checking health: {e.ToString()}", EventLogEntryType.Information);
 				return false;
 			}
 		}
