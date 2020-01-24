@@ -14,7 +14,11 @@ namespace IIS_Active_Passive_Failover
 
 		private volatile int slowStartCount;
 
+		private volatile int slowStopCount;
+
 		private volatile int numSuccessAfterFail;
+
+		private volatile int numFailAfterSuccess;
 
 		public Service1()
 		{
@@ -70,6 +74,10 @@ namespace IIS_Active_Passive_Failover
 			slowStartCount = int.Parse(slowStart);
 			numSuccessAfterFail = slowStartCount; // Assume everything's good to start
 
+			string slowStop = configuration.AppSettings.Settings["SlowStop"].Value;
+			slowStopCount = int.Parse(slowStop);
+			numFailAfterSuccess = 0; // Assume everything's good to start
+
 			Thread thread = new Thread(() => { Run(reverseProxyConfig, healthCheckConfig, interval); });
 			thread.Start();
 		}
@@ -80,6 +88,8 @@ namespace IIS_Active_Passive_Failover
 			{
 				if (healthCheckConfig.Check())
 				{
+					numFailAfterSuccess = 0;
+
 					if (numSuccessAfterFail < (slowStartCount - 1))
 					{
 						numSuccessAfterFail++;
@@ -92,7 +102,15 @@ namespace IIS_Active_Passive_Failover
 				else
 				{
 					numSuccessAfterFail = 0;
-					reverseProxyConfig.MarkServiceDown();
+
+					if (numFailAfterSuccess < (slowStopCount - 1))
+					{
+						numFailAfterSuccess++;
+					}
+					else
+					{
+						reverseProxyConfig.MarkServiceDown();
+					}
 				}
 
 				Thread.Sleep(interval * 1000);
