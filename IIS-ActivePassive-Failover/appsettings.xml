@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+	<!-- The root URL the reverse proxy should send requests to when
+        the health check is passing.
+        Example: https://example.com/test/ -->
+	<ActiveRootUrl></ActiveRootUrl>
+
+	<!-- The root URL the reverse proxy should send requests to when
+        the health check is failing.
+        Example: https://example-backup.com/test/ -->
+	<PassiveRootUrl></PassiveRootUrl>
+
+	<!-- The path to the Web.config file with the reverse proxy rules. -->
+	<WebConfigPath>C:\inetpub\wwwroot\web.config</WebConfigPath>
+
+	<!-- The name to assign the reverse proxy rule in Web.config. -->
+	<ReverseProxyRuleName>IvorySmugglingContracts</ReverseProxyRuleName>
+
+	<!-- Path portion of the incoming URL that won't be sent to the
+        proxied servers. This begins immediately following the host
+        (and port). For example, if a request comes in to
+        https://localhost/subpath/some/other/path and InboundSubpath
+        is set to "subpath" then "/some/other/path" will be appended
+        onto the end of the root URLs specified above in order to
+        complete the request. -->
+	<InboundSubpath></InboundSubpath>
+
+	<!-- The URL to query to determine the availability of the
+        "ActiveRootUrl" service. This path is appended to
+        the ActiveRootUrl
+        Example: "/healthcheck" => https://example.com/test/healthcheck -->
+	<HealthCheckPath></HealthCheckPath>
+
+	<!-- The HTTP method to use when making the health check request.
+        Only GET and POST are supported -->
+	<HealthCheckMethod>GET</HealthCheckMethod>
+
+	<!-- What criteria to use to evaluate the health check response.
+        "ResponseStatus": Check for a specific HTTP status. 
+        "Match": Compare the response body to the specified regex. -->
+	<HealthCheckMode>ResponseStatus</HealthCheckMode>
+
+	<!-- The value to use to determine if the health check is successful.
+        When HealthCheckMode is "ResponseStatus" this should be the HTTP
+        status code to consider successful.
+        When HealthCheckMode is "Match" this should be a regex to
+        compare the response body against. -->
+	<HealthCheckValue>200</HealthCheckValue>
+
+	<!-- The number of seconds after which the health check should timeout.
+        The active URL will be considered unavailable if the health check
+        times out. -->
+	<HealthCheckTimeout>2</HealthCheckTimeout>
+
+	<!-- The number of seconds between health checks. -->
+	<HealthCheckInterval>30</HealthCheckInterval>
+
+	<!-- After the primary service has been marked down, the number
+        of consecutive successful health checks that must pass
+        before the service is marked active again. This helps
+        smooth out the experience for services that may be slow
+        to start. -->
+	<SlowStart>3</SlowStart>
+
+	<!-- While the primary service is up, the number
+        of consecutive failed health checks that must pass
+        before the service is marked down. This helps
+        smooth out the experience for one-off connection
+        issues. -->
+	<SlowStop>2</SlowStop>
+</configuration>
